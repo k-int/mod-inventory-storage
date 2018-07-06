@@ -278,6 +278,46 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
+  public void cannotHaveNullPublication()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject example = nod(UUID.randomUUID());
+
+    //Ugh, hand crafting JSON is ugly,
+    // but cannot have null in array using the provided classes
+    String requestWithNullArrayMember = "{\n" +
+      "  \"id\" : \"764b5e8a-b892-42b6-83d0-1eadbc461b62\",\n" +
+      "  \"source\" : \"manual\",\n" +
+      "  \"title\" : \"Foo\",\n" +
+      "  \"alternativeTitles\" : [ ],\n" +
+      "  \"series\" : [ ],\n" +
+      "  \"identifiers\" : [ ],\n" +
+      "  \"contributors\" : [ ],\n" +
+      "  \"subjects\" : [ ],\n" +
+      "  \"classifications\" : [ ],\n" +
+      "  \"publication\" : [ ],\n" +
+      "  \"urls\" : [ ],\n" +
+      "  \"instanceTypeId\" : \"6312d172-f0cf-40f6-b27d-9fa8feaf332f\",\n" +
+      "  \"physicalDescriptions\" : [ ],\n" +
+      "  \"languages\" : [ ],\n" +
+      "  \"notes\" : [ ]\n" +
+      "}";
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+
+    client.postText(instancesStorageUrl(""), requestWithNullArrayMember,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+  }
+
+  @Test
   public void canReplaceAnInstanceAtSpecificLocation()
     throws MalformedURLException,
     InterruptedException,

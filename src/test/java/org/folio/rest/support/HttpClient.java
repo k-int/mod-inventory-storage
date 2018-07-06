@@ -27,6 +27,20 @@ public class HttpClient {
     String tenantId,
     Handler<HttpClientResponse> responseHandler) {
 
+    if(body == null) {
+      postText(url, null, tenantId, responseHandler);
+    }
+    else {
+      postText(url, Json.encodePrettily(body), tenantId, responseHandler);
+    }
+  }
+
+  public void postText(
+    URL url,
+    String encodedBody,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
+
     HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
 
     request.headers().add("Accept","application/json, text/plain");
@@ -36,12 +50,11 @@ public class HttpClient {
       request.headers().add(TENANT_HEADER, tenantId);
     }
 
-    if (body == null) {
+    if (encodedBody == null) {
       request.end();
       return;
     }
 
-    String encodedBody = Json.encodePrettily(body);
     log.debug("POST {0}, Request: {1}", url.toString(), encodedBody);
     request.end(encodedBody);
   }
